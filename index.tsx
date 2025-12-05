@@ -996,15 +996,15 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
                 <div className="p-6 space-y-6 flex-1 overflow-y-auto">
                     {/* Time */}
                     <div className="space-y-2">
-                        <label className="block text-sm font-bold text-gray-700">{t('field.time')}</label>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('field.time')}</label>
                         <div className="relative">
                             <input 
                                 type="datetime-local" 
                                 value={dateStr} 
                                 onChange={e => setDateStr(e.target.value)} 
-                                className="w-full max-w-full min-w-0 p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent outline-none font-medium text-gray-800 text-sm"
+                                className="w-full max-w-full min-w-0 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-transparent outline-none font-medium text-gray-800 text-sm"
                             />
-                            <Calendar className="absolute right-4 top-4 text-gray-400 pointer-events-none" size={20} />
+                            <Calendar className="absolute right-3 top-3 text-gray-400 pointer-events-none" size={18} />
                         </div>
                     </div>
 
@@ -1079,30 +1079,39 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
 
                             {/* Dose Inputs */}
                             {(route !== Route.patchApply || patchMode === "dose") && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    {(ester !== Ester.E2) && (
-                                        <div className="space-y-2">
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">{t('field.dose_raw')}</label>
-                                            <input 
-                                                type="number" inputMode="decimal"
-                                                value={rawDose} onChange={e => handleRawChange(e.target.value)} 
-                                                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 outline-none font-mono" 
-                                                placeholder="0.0"
-                                            />
-                                        </div>
-                                    )}
-                                    <div className={`space-y-2 ${(ester === Ester.E2 && route !== Route.gel && route !== Route.oral && route !== Route.sublingual) ? "col-span-2" : ""}`}>
-                                        <label className="block text-xs font-bold text-pink-400 uppercase tracking-wider">
-                                            {route === Route.patchApply ? t('field.dose_raw') : t('field.dose_e2')}
-                                        </label>
-                                        <input 
-                                            type="number" inputMode="decimal"
-                                            value={e2Dose} onChange={e => handleE2Change(e.target.value)} 
-                                            className="w-full p-4 bg-pink-50 border border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 outline-none font-bold text-pink-500 font-mono" 
-                                            placeholder="0.0"
-                                        />
+                                <>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {(ester !== Ester.E2) && (
+                                            <div className={`space-y-2 ${ (ester === Ester.EV && (route === Route.injection || route === Route.sublingual || route === Route.oral)) ? 'col-span-2' : '' }`}>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">{t('field.dose_raw')}</label>
+                                                <input 
+                                                    type="number" inputMode="decimal"
+                                                    value={rawDose} onChange={e => handleRawChange(e.target.value)} 
+                                                    className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 outline-none font-mono" 
+                                                    placeholder="0.0"
+                                                />
+                                            </div>
+                                        )}
+                                        {!(ester === Ester.EV && (route === Route.injection || route === Route.sublingual || route === Route.oral)) && (
+                                            <div className={`space-y-2 ${(ester === Ester.E2 && route !== Route.gel && route !== Route.oral && route !== Route.sublingual) ? "col-span-2" : ""}`}>
+                                                <label className="block text-xs font-bold text-pink-400 uppercase tracking-wider">
+                                                    {route === Route.patchApply ? t('field.dose_raw') : t('field.dose_e2')}
+                                                </label>
+                                                <input 
+                                                    type="number" inputMode="decimal"
+                                                    value={e2Dose} onChange={e => handleE2Change(e.target.value)} 
+                                                    className="w-full p-4 bg-pink-50 border border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 outline-none font-bold text-pink-500 font-mono" 
+                                                    placeholder="0.0"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+                                    {(ester === Ester.EV && (route === Route.injection || route === Route.sublingual || route === Route.oral)) && (
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            {t('field.dose_e2')}: {e2Dose ? `${e2Dose} mg` : '--'}
+                                        </p>
+                                    )}
+                                </>
                             )}
 
                             {route === Route.patchApply && patchMode === "rate" && (
@@ -1575,29 +1584,31 @@ const ResultChart = ({ sim }: { sim: SimulationResult | null }) => {
     
     return (
         <div className="bg-white p-6 rounded-3xl shadow-lg shadow-gray-100 border border-gray-100 relative overflow-hidden group">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-sm font-bold text-gray-500 tracking-wider">{t('chart.title')}</h2>
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 bg-gray-50 rounded-xl p-1 shadow-inner shadow-gray-100">
-                        {[2, 4, 6].map((factor) => (
-                            <button
-                                key={factor}
-                                onClick={() => setZoomFactor(factor)}
-                                className="px-3 py-1 text-xs font-bold text-gray-600 rounded-lg transition-all bg-white hover:bg-pink-50 hover:text-pink-500 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
-                            >
-                                {factor}x
-                            </button>
-                        ))}
+            <div className="flex flex-col gap-2 mb-6">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-sm font-bold text-gray-500 tracking-wider">{t('chart.title')}</h2>
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 bg-gray-50 rounded-xl p-1 shadow-inner shadow-gray-100">
+                            {[2, 4, 6].map((factor) => (
+                                <button
+                                    key={factor}
+                                    onClick={() => setZoomFactor(factor)}
+                                    className="px-3 py-1 text-xs font-bold text-gray-600 rounded-lg transition-all bg-white hover:bg-pink-50 hover:text-pink-500 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
+                                >
+                                    {factor}x
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    {isZoomed && (
-                        <button 
-                            onClick={resetZoom}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-xs font-bold transition-all animate-in fade-in hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
-                        >
-                            <RotateCcw size={12} /> {t('chart.reset')}
-                        </button>
-                    )}
                 </div>
+                {isZoomed && (
+                    <button 
+                        onClick={resetZoom}
+                        className="self-start flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-xs font-bold transition-all animate-in fade-in hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
+                    >
+                        <RotateCcw size={12} /> {t('chart.reset')}
+                    </button>
+                )}
             </div>
             
             <div 
