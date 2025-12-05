@@ -18,6 +18,8 @@ import {
     getBioavailabilityMultiplier, encryptData, decryptData, GEL_SITE_ORDER, GelSiteParams
 } from './logic.ts';
 
+const APP_VERSION = "0.1.0";
+
 // --- Localization ---
 
 type Lang = 'zh' | 'en' | 'ru';
@@ -146,6 +148,11 @@ const TRANSLATIONS = {
         "drawer.model_desc": "了解估算背后的药代动力学模型。",
         "drawer.model_confirm": "即将访问第三方网站 (misaka23323.com)，是否继续？",
         "drawer.github_confirm": "即将访问第三方网站 (github.com)，是否继续？",
+        
+        "settings.group.general": "常规设置",
+        "settings.group.data": "数据管理",
+        "settings.group.about": "关于",
+        "settings.version": "版本号",
     },
     en: {
         "app.title": "HRT Recorder",
@@ -270,6 +277,11 @@ const TRANSLATIONS = {
         "drawer.model_desc": "Learn about the underlying PK model.",
         "drawer.model_confirm": "You are about to visit a third-party website (misaka23323.com). Continue?",
         "drawer.github_confirm": "You are about to visit a third-party website (github.com). Continue?",
+
+        "settings.group.general": "General",
+        "settings.group.data": "Data Management",
+        "settings.group.about": "About",
+        "settings.version": "Version",
     },
     ru: {
         "app.title": "HRT Recorder",
@@ -298,6 +310,11 @@ const TRANSLATIONS = {
         "drawer.github": "GitHub репозиторий",
         "drawer.github_desc": "Исходный код и отзывы.",
         "drawer.empty_export": "Нет доз для экспорта.",
+        
+        "settings.group.general": "Общие",
+        "settings.group.data": "Управление данными",
+        "settings.group.about": "О приложении",
+        "settings.version": "Версия",
         "drawer.import_error": "Ошибка импорта. Пожалуйста, проверьте правильность файла.",
         "drawer.import_success": "Дозы успешно импортированы.",
         "drawer.close": "Закрыть панель",
@@ -1928,8 +1945,8 @@ const AppContent = () => {
     };
 
     return (
-        <div className="relative min-h-screen pb-32 max-w-lg mx-auto bg-gray-50 shadow-2xl overflow-hidden font-sans">
-            <div className="transition duration-300">
+        <div className="h-screen w-full bg-white flex flex-col font-sans text-gray-900 select-none overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden w-full max-w-lg mx-auto bg-white shadow-2xl">
                 {/* Header */}
                 {currentView === 'home' && (
                     <header className="bg-white px-8 pt-12 pb-8 rounded-b-[2.5rem] shadow-xl shadow-gray-100 z-10 sticky top-0">
@@ -1954,7 +1971,7 @@ const AppContent = () => {
                     </header>
                 )}
 
-                <main className="px-6 py-8 space-y-8">
+                <main className="flex-1 overflow-y-auto bg-white w-full scrollbar-hide px-6 py-8">
                     {/* Chart */}
                     {currentView === 'home' && (
                         <ResultChart sim={simulation} />
@@ -2046,102 +2063,125 @@ const AppContent = () => {
 
                     {/* Settings */}
                     {currentView === 'settings' && (
-                        <div className="space-y-4 pt-4">
+                        <div className="space-y-8 pt-4">
                             <div className="px-2">
-                                <h2 className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
-                                    <Settings size={20} className="text-pink-400" /> {t('drawer.title')}
+                                <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                                    <Settings size={24} className="text-pink-400" /> {t('nav.settings')}
                                 </h2>
                             </div>
 
-                            <button
-                                onClick={handleSaveDosages}
-                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-pink-200 hover:bg-pink-50 transition bg-white"
-                            >
-                                <Download className="text-pink-400" size={20} />
-                                <div className="text-left">
-                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.save')}</p>
-                                    <p className="text-xs text-gray-500">{t('drawer.save_hint')}</p>
-                                </div>
-                            </button>
+                            {/* General Settings */}
+                            <div className="space-y-3">
+                                <h3 className="px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('settings.group.general')}</h3>
+                                <button
+                                    onClick={() => {
+                                        if (lang === 'zh') setLang('en');
+                                        else if (lang === 'en') setLang('ru');
+                                        else setLang('zh');
+                                    }}
+                                    className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-blue-200 hover:bg-blue-50 transition bg-white"
+                                >
+                                    <Languages className="text-blue-500" size={20} />
+                                    <div className="text-left">
+                                        <p className="font-bold text-gray-900 text-sm">{t('drawer.lang')} ({lang.toUpperCase()})</p>
+                                        <p className="text-xs text-gray-500">{t('drawer.lang_hint')}</p>
+                                    </div>
+                                </button>
+                            </div>
 
-                            <button
-                                onClick={() => setIsImportModalOpen(true)}
-                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-teal-200 hover:bg-teal-50 transition bg-white"
-                            >
-                                <Upload className="text-teal-500" size={20} />
-                                <div className="text-left">
-                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.import')}</p>
-                                    <p className="text-xs text-gray-500">{t('drawer.import_hint')}</p>
-                                </div>
-                            </button>
+                            {/* Data Management */}
+                            <div className="space-y-3">
+                                <h3 className="px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('settings.group.data')}</h3>
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={handleSaveDosages}
+                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-pink-200 hover:bg-pink-50 transition bg-white"
+                                    >
+                                        <Download className="text-pink-400" size={20} />
+                                        <div className="text-left">
+                                            <p className="font-bold text-gray-900 text-sm">{t('drawer.save')}</p>
+                                            <p className="text-xs text-gray-500">{t('drawer.save_hint')}</p>
+                                        </div>
+                                    </button>
 
-                            <button
-                                onClick={() => setIsQrModalOpen(true)}
-                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 transition bg-white"
-                            >
-                                <QrCode className="text-indigo-500" size={20} />
-                                <div className="text-left">
-                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.qr')}</p>
-                                    <p className="text-xs text-gray-500">{t('drawer.qr_hint')}</p>
-                                </div>
-                            </button>
+                                    <button
+                                        onClick={() => setIsImportModalOpen(true)}
+                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-teal-200 hover:bg-teal-50 transition bg-white"
+                                    >
+                                        <Upload className="text-teal-500" size={20} />
+                                        <div className="text-left">
+                                            <p className="font-bold text-gray-900 text-sm">{t('drawer.import')}</p>
+                                            <p className="text-xs text-gray-500">{t('drawer.import_hint')}</p>
+                                        </div>
+                                    </button>
 
-                            <button
-                                onClick={() => {
-                                    if (lang === 'zh') setLang('en');
-                                    else if (lang === 'en') setLang('ru');
-                                    else setLang('zh');
-                                }}
-                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-blue-200 hover:bg-blue-50 transition bg-white"
-                            >
-                                <Languages className="text-blue-500" size={20} />
-                                <div className="text-left">
-                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.lang')} ({lang.toUpperCase()})</p>
-                                    <p className="text-xs text-gray-500">{t('drawer.lang_hint')}</p>
-                                </div>
-                            </button>
+                                    <button
+                                        onClick={() => setIsQrModalOpen(true)}
+                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 transition bg-white"
+                                    >
+                                        <QrCode className="text-indigo-500" size={20} />
+                                        <div className="text-left">
+                                            <p className="font-bold text-gray-900 text-sm">{t('drawer.qr')}</p>
+                                            <p className="text-xs text-gray-500">{t('drawer.qr_hint')}</p>
+                                        </div>
+                                    </button>
 
-                            <button
-                                onClick={() => {
-                                    showDialog('confirm', t('drawer.model_confirm'), () => {
-                                        window.open('https://misaka23323.com/articles/estrogen-model-summary', '_blank');
-                                    });
-                                }}
-                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition bg-white"
-                            >
-                                <Info className="text-purple-500" size={20} />
-                                <div className="text-left">
-                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.model_title')}</p>
-                                    <p className="text-xs text-gray-500">{t('drawer.model_desc')}</p>
+                                    <button
+                                        onClick={handleClearAllEvents}
+                                        disabled={!events.length}
+                                        className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition bg-white ${events.length ? 'border-gray-200 hover:border-red-200 hover:bg-red-50' : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'}`}
+                                    >
+                                        <Trash2 className="text-red-400" size={20} />
+                                        <div className="text-left">
+                                            <p className="font-bold text-gray-900 text-sm">{t('drawer.clear')}</p>
+                                            <p className="text-xs text-gray-500">{t('drawer.clear_confirm')}</p>
+                                        </div>
+                                    </button>
                                 </div>
-                            </button>
+                            </div>
 
-                            <button
-                                onClick={handleClearAllEvents}
-                                disabled={!events.length}
-                                className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition bg-white ${events.length ? 'border-gray-200 hover:border-red-200 hover:bg-red-50' : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'}`}
-                            >
-                                <Trash2 className="text-red-400" size={20} />
-                                <div className="text-left">
-                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.clear')}</p>
-                                    <p className="text-xs text-gray-500">{t('drawer.clear_confirm')}</p>
-                                </div>
-                            </button>
+                            {/* About */}
+                            <div className="space-y-3">
+                                <h3 className="px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('settings.group.about')}</h3>
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={() => {
+                                            showDialog('confirm', t('drawer.model_confirm'), () => {
+                                                window.open('https://misaka23323.com/articles/estrogen-model-summary', '_blank');
+                                            });
+                                        }}
+                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition bg-white"
+                                    >
+                                        <Info className="text-purple-500" size={20} />
+                                        <div className="text-left">
+                                            <p className="font-bold text-gray-900 text-sm">{t('drawer.model_title')}</p>
+                                            <p className="text-xs text-gray-500">{t('drawer.model_desc')}</p>
+                                        </div>
+                                    </button>
 
-                            <button
-                                onClick={() => {
-                                    showDialog('confirm', t('drawer.github_confirm'), () => {
-                                        window.open('https://github.com/SmirnovaOyama/Oyama-s-HRT-recorder', '_blank');
-                                    });
-                                }}
-                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-gray-800 hover:bg-gray-50 transition bg-white"
-                            >
-                                <Github className="text-gray-700" size={20} />
-                                <div className="text-left">
-                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.github')}</p>
-                                    <p className="text-xs text-gray-500">{t('drawer.github_desc')}</p>
+                                    <button
+                                        onClick={() => {
+                                            showDialog('confirm', t('drawer.github_confirm'), () => {
+                                                window.open('https://github.com/SmirnovaOyama/Oyama-s-HRT-recorder', '_blank');
+                                            });
+                                        }}
+                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-gray-800 hover:bg-gray-50 transition bg-white"
+                                    >
+                                        <Github className="text-gray-700" size={20} />
+                                        <div className="text-left">
+                                            <p className="font-bold text-gray-900 text-sm">{t('drawer.github')}</p>
+                                            <p className="text-xs text-gray-500">{t('drawer.github_desc')}</p>
+                                        </div>
+                                    </button>
                                 </div>
-                            </button>
+                            </div>
+
+                            {/* Version Footer */}
+                            <div className="pt-4 pb-2 flex justify-center">
+                                <p className="text-xs font-medium text-gray-300">
+                                    v{APP_VERSION}
+                                </p>
+                            </div>
                         </div>
                     )}
                 </main>
