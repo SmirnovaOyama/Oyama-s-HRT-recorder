@@ -58,6 +58,7 @@ const TRANSLATIONS_BASE = {
         "drawer.qr": "二维码导入导出",
         "drawer.qr_hint": "二维码分享或恢复。",
         "import.title": "导入数据",
+        "export.title": "导出数据",
         "import.text": "粘贴 JSON 文本",
         "import.paste_hint": "在此处粘贴 JSON 内容...",
         "import.file": "选择 JSON 文件",
@@ -187,6 +188,7 @@ const TRANSLATIONS_BASE = {
         "drawer.qr": "QR Import/Export",
         "drawer.qr_hint": "Share or restore via QR.",
         "import.title": "Import Data",
+        "export.title": "Export Data",
         "import.text": "Paste JSON Text",
         "import.paste_hint": "Paste JSON content here...",
         "import.file": "Select JSON File",
@@ -327,6 +329,7 @@ const TRANSLATIONS_BASE = {
         "drawer.model_confirm": "Вы переходите на сторонний сайт (misaka23323.com). Продолжить?",
         "drawer.github_confirm": "Вы переходите на сторонний сайт (github.com). Продолжить?",
         "import.title": "Импорт данных",
+        "export.title": "Экспорт данных",
         "import.text": "Вставить текст JSON",
         "import.paste_hint": "Вставьте содержимое JSON сюда...",
         "import.file": "Выбрать файл JSON",
@@ -449,6 +452,7 @@ const TRANSLATIONS = {
         "drawer.qr": "二維碼導入導出",
         "drawer.qr_hint": "二維碼分享或恢復。",
         "import.title": "導入資料",
+        "export.title": "導出資料",
         "import.text": "貼上 JSON 文字",
         "import.paste_hint": "在此處貼上 JSON 內容...",
         "import.file": "選擇 JSON 文件",
@@ -570,6 +574,7 @@ const TRANSLATIONS = {
         "drawer.qr": "二維碼導入導出",
         "drawer.qr_hint": "用二維碼分享或者恢復。",
         "import.title": "導入數據",
+        "export.title": "導出數據",
         "import.text": "貼上 JSON 文字",
         "import.paste_hint": "喺度貼上 JSON 內容...",
         "import.file": "揀 JSON 文件",
@@ -694,6 +699,7 @@ const TRANSLATIONS = {
         "drawer.qr": "QR імпорт/експорт",
         "drawer.qr_hint": "Поділитися або відновити через QR.",
         "import.title": "Імпорт даних",
+        "export.title": "Експорт даних",
         "import.text": "Вставте JSON",
         "import.paste_hint": "Вставте JSON сюди...",
         "import.file": "Обрати JSON файл",
@@ -1047,26 +1053,149 @@ const PasswordInputModal = ({ isOpen, onClose, onConfirm }: { isOpen: boolean, o
     );
 };
 
-const ExportModal = ({ isOpen, onClose, onExport }: { isOpen: boolean, onClose: () => void, onExport: (encrypt: boolean) => void }) => {
+const ExportModal = ({ isOpen, onClose, onExport, events, weight }: { isOpen: boolean, onClose: () => void, onExport: (encrypt: boolean) => void, events: DoseEvent[], weight: number }) => {
     const { t } = useTranslation();
+    const [activeTab, setActiveTab] = useState<'qr' | 'json'>('qr');
+    const [isEncrypted, setIsEncrypted] = useState(false);
+    const [displayData, setDisplayData] = useState("");
+    const [password, setPassword] = useState("");
+    const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
+
+    const rawDataString = useMemo(() => events.length ? JSON.stringify({ weight, events }) : '', [events, weight]);
+
+    useEffect(() => {
+        if (!isOpen) {
+            setIsEncrypted(false);
+            setActiveTab('qr');
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
+        let active = true;
+        const update = async () => {
+            if (!isOpen || !rawDataString) {
+                if (active) setDisplayData("");
+                return;
+            }
+            if (isEncrypted) {
+                const { data, password: pw } = await encryptData(rawDataString);
+                if (active) {
+                    setDisplayData(data);
+                    setPassword(pw);
+                }
+            } else {
+                if (active) {
+                    setDisplayData(rawDataString);
+                    setPassword("");
+                }
+            }
+        };
+        update();
+        return () => { active = false; };
+    }, [isOpen, isEncrypted, rawDataString]);
+
+    const handleCopy = async () => {
+        if (!displayData) return;
+        try {
+            await navigator.clipboard.writeText(displayData);
+            setCopyState('copied');
+            setTimeout(() => setCopyState('idle'), 2000);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     if (!isOpen) return null;
+
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 transform transition-all scale-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">{t('drawer.save')}</h3>
-                <div className="space-y-3">
-                    <button onClick={() => onExport(false)} className="w-full py-4 bg-gray-100 text-gray-800 font-bold rounded-xl hover:bg-gray-200 transition flex items-center justify-center gap-2">
-                        <Download size={20} />
-                        JSON
-                    </button>
-                    <button onClick={() => onExport(true)} className="w-full py-4 bg-pink-400 text-white font-bold rounded-xl hover:bg-pink-500 shadow-lg shadow-pink-100 transition flex items-center justify-center gap-2">
-                        <Lock size={20} />
-                        JSON (Encrypted)
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-100 flex flex-col max-h-[90vh]">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">{t('export.title')}</h3>
+                    <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition">
+                        <X size={20} className="text-gray-500" />
                     </button>
                 </div>
-                <button onClick={onClose} className="mt-6 w-full py-2 text-gray-400 font-bold hover:text-gray-600 transition">
-                    {t('btn.cancel')}
-                </button>
+
+                <div className="flex p-1 bg-gray-100 rounded-xl mb-6 shrink-0">
+                    <button
+                        onClick={() => setActiveTab('qr')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'qr' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
+                    >
+                        <QrCode size={16} />
+                        QR Code
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('json')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'json' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
+                    >
+                        <Download size={16} />
+                        JSON
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto min-h-0">
+                    {activeTab === 'qr' && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+                                <label className="text-sm font-bold text-gray-700">{t('qr.encrypt_label')}</label>
+                                <div 
+                                    className={`w-10 h-6 rounded-full p-1 cursor-pointer transition-colors ${isEncrypted ? 'bg-pink-400' : 'bg-gray-300'}`} 
+                                    onClick={() => setIsEncrypted(!isEncrypted)}
+                                >
+                                    <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${isEncrypted ? 'translate-x-4' : ''}`} />
+                                </div>
+                            </div>
+
+                            {displayData ? (
+                                <div className="flex flex-col items-center gap-4">
+                                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative">
+                                        <QRCodeCanvas value={displayData} size={200} includeMargin level="M" />
+                                        {isEncrypted && (
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <Lock className="text-pink-400/20 w-24 h-24" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    {isEncrypted && password && (
+                                        <div className="w-full bg-pink-50 border border-pink-100 p-3 rounded-xl text-center">
+                                            <p className="text-xs text-pink-400 font-bold uppercase mb-1">{t('export.password_title')}</p>
+                                            <p className="font-mono font-bold text-gray-800 text-lg select-all">{password}</p>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={handleCopy}
+                                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 transition"
+                                    >
+                                        <Copy size={16} /> {copyState === 'copied' ? t('qr.copied') : t('qr.copy')}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-gray-400">
+                                    <p>{t('qr.export.empty')}</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'json' && (
+                        <div className="space-y-3">
+                            <button onClick={() => onExport(false)} className="w-full py-4 bg-gray-50 border border-gray-200 text-gray-800 font-bold rounded-xl hover:bg-gray-100 hover:border-gray-300 transition flex items-center justify-center gap-2">
+                                <Download size={20} />
+                                JSON
+                            </button>
+                            <button onClick={() => onExport(true)} className="w-full py-4 bg-pink-50 border border-pink-200 text-pink-600 font-bold rounded-xl hover:bg-pink-100 hover:border-pink-300 transition flex items-center justify-center gap-2">
+                                <Lock size={20} />
+                                JSON ({t('qr.encrypt_label')})
+                            </button>
+                            <p className="text-xs text-gray-400 text-center mt-4 leading-relaxed">
+                                {t('drawer.save_hint')}
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -1588,14 +1717,22 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
 
 const ImportModal = ({ isOpen, onClose, onImportJson }: { isOpen: boolean; onClose: () => void; onImportJson: (text: string) => boolean }) => {
     const { t } = useTranslation();
+    const [activeTab, setActiveTab] = useState<'qr' | 'json'>('qr');
     const [text, setText] = useState("");
+    const [errorMsg, setErrorMsg] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const qrFileInputRef = useRef<HTMLInputElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
-        if (isOpen) setText("");
+        if (isOpen) {
+            setText("");
+            setErrorMsg("");
+            setActiveTab('qr');
+        }
     }, [isOpen]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleJsonFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const reader = new FileReader();
@@ -1615,143 +1752,7 @@ const ImportModal = ({ isOpen, onClose, onImportJson }: { isOpen: boolean; onClo
         }
     };
 
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-100 flex flex-col gap-4">
-                <div className="flex justify-between items-center border-b border-gray-100 pb-4">
-                    <h3 className="text-xl font-bold text-gray-900">{t('import.title')}</h3>
-                    <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition">
-                        <X size={20} className="text-gray-500" />
-                    </button>
-                </div>
-
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">{t('import.text')}</label>
-                        <textarea
-                            className="w-full h-32 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 outline-none font-mono text-xs"
-                            placeholder={t('import.paste_hint')}
-                            value={text}
-                            onChange={e => setText(e.target.value)}
-                        />
-                        <button
-                            onClick={handleTextImport}
-                            disabled={!text.trim()}
-                            className="mt-2 w-full py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                            {t('drawer.import')}
-                        </button>
-                    </div>
-
-                    <div className="relative flex py-2 items-center">
-                        <div className="flex-grow border-t border-gray-200"></div>
-                        <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase font-bold">OR</span>
-                        <div className="flex-grow border-t border-gray-200"></div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">{t('import.file')}</label>
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="w-full py-3 border-2 border-dashed border-gray-300 text-gray-500 font-bold rounded-xl hover:border-pink-300 hover:bg-pink-50 hover:text-pink-500 transition flex items-center justify-center gap-2"
-                        >
-                            <Upload size={20} />
-                            {t('import.file_btn')}
-                        </button>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="application/json"
-                            className="hidden"
-                            onChange={handleFileChange}
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const QRCodeModal = ({ isOpen, onClose, events, weight, onImportJson }: { isOpen: boolean; onClose: () => void; events: DoseEvent[]; weight: number; onImportJson: (payload: string) => boolean; }) => {
-    const { t } = useTranslation();
-    const [isEncrypted, setIsEncrypted] = useState(false);
-    const [displayData, setDisplayData] = useState("");
-    const [password, setPassword] = useState("");
-    
-    const rawDataString = useMemo(() => events.length ? JSON.stringify({ weight, events }) : '', [events, weight]);
-
-    useEffect(() => {
-        let active = true;
-        const update = async () => {
-            if (!isOpen || !rawDataString) {
-                if (active) setDisplayData("");
-                return;
-            }
-            if (isEncrypted) {
-                const { data, password: pw } = await encryptData(rawDataString);
-                if (active) {
-                    setDisplayData(data);
-                    setPassword(pw);
-                }
-            } else {
-                if (active) {
-                    setDisplayData(rawDataString);
-                    setPassword("");
-                }
-            }
-        };
-        update();
-        return () => { active = false; };
-    }, [isOpen, isEncrypted, rawDataString]);
-
-    const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
-    const [errorMsg, setErrorMsg] = useState('');
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-
-    useEffect(() => {
-        if (!isOpen) {
-            setErrorMsg('');
-            setIsEncrypted(false);
-        }
-    }, [isOpen]);
-
-    const handleDecoded = useCallback((text: string) => {
-        if (!text) {
-            setErrorMsg(t('qr.error.format'));
-            return;
-        }
-        const ok = onImportJson(text);
-        if (ok) {
-            setErrorMsg('');
-            onClose();
-        } else {
-            // If onImportJson returns false, it might be because it's waiting for password (handled in AppContent)
-            // But here we just want to know if it was "handled".
-            // My updated importEventsFromJson returns false if encrypted (waiting for password).
-            // So we should probably assume if it returns false, it might be valid but encrypted.
-            // But wait, if it returns false, it shows an error dialog in the original code?
-            // In my updated code:
-            // if encrypted -> returns false (but opens password modal).
-            // if error -> returns false (and shows error dialog).
-            // So here we can't distinguish easily.
-            // However, `importEventsFromJson` handles the UI for both cases.
-            // So we can just close the QR modal if we think it was successful or "in progress".
-            // But if it was an error, we want to show error in QR modal?
-            // Let's look at `importEventsFromJson` again.
-            // It shows `showDialog('alert', ...)` on error.
-            // So the user will see the alert.
-            // We can just close the QR modal? Or keep it open?
-            // If it's encrypted, the Password Modal will appear ON TOP of the QR Modal?
-            // Yes, z-index 60 vs 50.
-            // So we can keep QR modal open or close it.
-            // Closing it is cleaner.
-            onClose();
-        }
-    }, [onImportJson, onClose, t]);
-
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleQrImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         setErrorMsg('');
@@ -1768,7 +1769,9 @@ const QRCodeModal = ({ isOpen, onClose, events, weight, onImportJson }: { isOpen
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const code = jsQR(imageData.data, canvas.width, canvas.height);
                 if (code?.data) {
-                    handleDecoded(code.data);
+                    if (onImportJson(code.data)) {
+                        onClose();
+                    }
                 } else {
                     setErrorMsg(t('qr.error.decode'));
                 }
@@ -1780,106 +1783,98 @@ const QRCodeModal = ({ isOpen, onClose, events, weight, onImportJson }: { isOpen
         e.target.value = "";
     };
 
-    const handleCopy = async () => {
-        if (!displayData) return;
-        try {
-            await navigator.clipboard.writeText(displayData);
-            setCopyState('copied');
-            setTimeout(() => setCopyState('idle'), 2000);
-        } catch (err) {
-            console.error(err);
-            setErrorMsg(t('qr.error.format'));
-        }
-    };
-
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                    <div>
-                        <p className="text-xs font-semibold text-pink-400 uppercase tracking-wider">{t('qr.title')}</p>
-                        <p className="text-sm text-gray-500 mt-1">{t('qr.help')}</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200">
-                        <X size={18} />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-100 flex flex-col max-h-[90vh]">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">{t('import.title')}</h3>
+                    <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition">
+                        <X size={20} className="text-gray-500" />
                     </button>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6 p-6">
-                    <section className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
-                                <QrCode size={16} className="text-pink-400" />
-                                {t('qr.export.title')}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <label className="text-xs font-bold text-gray-500">{t('qr.encrypt_label')}</label>
-                                <div 
-                                    className={`w-10 h-6 rounded-full p-1 cursor-pointer transition-colors ${isEncrypted ? 'bg-pink-400' : 'bg-gray-300'}`} 
-                                    onClick={() => setIsEncrypted(!isEncrypted)}
-                                >
-                                    <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${isEncrypted ? 'translate-x-4' : ''}`} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {displayData ? (
-                            <div className="flex flex-col items-center gap-3">
-                                <div className="bg-white p-4 rounded-2xl shadow-sm relative">
-                                    <QRCodeCanvas value={displayData} size={200} includeMargin level="M" />
-                                    {isEncrypted && (
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <Lock className="text-pink-400/20 w-24 h-24" />
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {isEncrypted && password && (
-                                    <div className="w-full bg-pink-50 border border-pink-100 p-3 rounded-xl text-center">
-                                        <p className="text-xs text-pink-400 font-bold uppercase mb-1">{t('export.password_title')}</p>
-                                        <p className="font-mono font-bold text-gray-800 text-lg select-all">{password}</p>
-                                    </div>
-                                )}
-
-                                <textarea
-                                    className="w-full h-20 text-xs p-3 rounded-xl border border-gray-200 bg-white font-mono text-gray-600"
-                                    readOnly
-                                    value={displayData}
-                                />
-                                <button
-                                    onClick={handleCopy}
-                                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800"
-                                >
-                                    <Copy size={16} /> {copyState === 'copied' ? t('qr.copied') : t('qr.copy')}
-                                </button>
-                            </div>
-                        ) : (
-                            <p className="text-sm text-gray-500">{t('qr.export.empty')}</p>
-                        )}
-                    </section>
-
-                    <section className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
-                        <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
-                            <Camera size={16} className="text-teal-500" />
-                            {t('qr.import.title')}
-                        </div>
-                        
-                        <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <ImageIcon size={16} className="text-blue-500" />
-                                {t('qr.import.file')}
-                            </label>
-                            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImageUpload} className="w-full text-sm text-gray-600" />
-                            <p className="text-xs text-gray-500">{t('qr.upload.hint')}</p>
-                        </div>
-
-                        {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
-                    </section>
+                <div className="flex p-1 bg-gray-100 rounded-xl mb-6 shrink-0">
+                    <button
+                        onClick={() => setActiveTab('qr')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'qr' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
+                    >
+                        <QrCode size={16} />
+                        QR Code
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('json')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'json' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
+                    >
+                        <Activity size={16} />
+                        JSON
+                    </button>
                 </div>
 
-                <canvas ref={canvasRef} className="hidden" />
+                <div className="flex-1 overflow-y-auto min-h-0">
+                    {activeTab === 'qr' && (
+                        <div className="space-y-4">
+                            <div className="p-8 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center text-center hover:bg-gray-50 transition cursor-pointer" onClick={() => qrFileInputRef.current?.click()}>
+                                <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
+                                    <ImageIcon size={32} />
+                                </div>
+                                <p className="text-sm font-bold text-gray-900">{t('qr.import.file')}</p>
+                                <p className="text-xs text-gray-400 mt-1">{t('qr.upload.hint')}</p>
+                            </div>
+                            <input type="file" accept="image/*" ref={qrFileInputRef} onChange={handleQrImageUpload} className="hidden" />
+                            
+                            {errorMsg && (
+                                <div className="p-3 bg-red-50 text-red-500 text-xs font-bold rounded-xl text-center">
+                                    {errorMsg}
+                                </div>
+                            )}
+                            <canvas ref={canvasRef} className="hidden" />
+                        </div>
+                    )}
+
+                    {activeTab === 'json' && (
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">{t('import.text')}</label>
+                                <textarea
+                                    className="w-full h-32 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 outline-none font-mono text-xs"
+                                    placeholder={t('import.paste_hint')}
+                                    value={text}
+                                    onChange={e => setText(e.target.value)}
+                                />
+                                <button
+                                    onClick={handleTextImport}
+                                    disabled={!text.trim()}
+                                    className="mt-2 w-full py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                >
+                                    {t('drawer.import')}
+                                </button>
+                            </div>
+
+                            <div className="relative flex py-2 items-center">
+                                <div className="flex-grow border-t border-gray-200"></div>
+                                <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase font-bold">OR</span>
+                                <div className="flex-grow border-t border-gray-200"></div>
+                            </div>
+
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full py-3 border-2 border-dashed border-gray-300 text-gray-500 font-bold rounded-xl hover:border-pink-300 hover:bg-pink-50 hover:text-pink-500 transition flex items-center justify-center gap-2"
+                            >
+                                <Upload size={20} />
+                                {t('import.file_btn')}
+                            </button>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="application/json"
+                                className="hidden"
+                                onChange={handleJsonFileChange}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -2103,7 +2098,6 @@ const AppContent = () => {
     const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<DoseEvent | null>(null);
-    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [generatedPassword, setGeneratedPassword] = useState("");
@@ -2123,10 +2117,10 @@ const AppContent = () => {
     ]), []);
 
     useEffect(() => {
-        const shouldLock = isExportModalOpen || isPasswordDisplayOpen || isPasswordInputOpen || isWeightModalOpen || isFormOpen || isQrModalOpen || isImportModalOpen;
+        const shouldLock = isExportModalOpen || isPasswordDisplayOpen || isPasswordInputOpen || isWeightModalOpen || isFormOpen || isImportModalOpen;
         document.body.style.overflow = shouldLock ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [isExportModalOpen, isPasswordDisplayOpen, isPasswordInputOpen, isWeightModalOpen, isFormOpen, isQrModalOpen, isImportModalOpen]);
+    }, [isExportModalOpen, isPasswordDisplayOpen, isPasswordInputOpen, isWeightModalOpen, isFormOpen, isImportModalOpen]);
     const [pendingImportText, setPendingImportText] = useState<string | null>(null);
 
     useEffect(() => { localStorage.setItem('hrt-events', JSON.stringify(events)); }, [events]);
@@ -2479,35 +2473,24 @@ const AppContent = () => {
                                 <h3 className="px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('settings.group.data')}</h3>
                                 <div className="space-y-3">
                                     <button
-                                        onClick={handleSaveDosages}
-                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-pink-200 hover:bg-pink-50 transition bg-white"
-                                    >
-                                        <Download className="text-pink-400" size={20} />
-                                        <div className="text-left">
-                                            <p className="font-bold text-gray-900 text-sm">{t('drawer.save')}</p>
-                                            <p className="text-xs text-gray-500">{t('drawer.save_hint')}</p>
-                                        </div>
-                                    </button>
-
-                                    <button
                                         onClick={() => setIsImportModalOpen(true)}
                                         className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-teal-200 hover:bg-teal-50 transition bg-white"
                                     >
                                         <Upload className="text-teal-500" size={20} />
                                         <div className="text-left">
-                                            <p className="font-bold text-gray-900 text-sm">{t('drawer.import')}</p>
+                                            <p className="font-bold text-gray-900 text-sm">{t('import.title')}</p>
                                             <p className="text-xs text-gray-500">{t('drawer.import_hint')}</p>
                                         </div>
                                     </button>
 
                                     <button
-                                        onClick={() => setIsQrModalOpen(true)}
-                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 transition bg-white"
+                                        onClick={handleSaveDosages}
+                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-pink-200 hover:bg-pink-50 transition bg-white"
                                     >
-                                        <QrCode className="text-indigo-500" size={20} />
+                                        <Download className="text-pink-400" size={20} />
                                         <div className="text-left">
-                                            <p className="font-bold text-gray-900 text-sm">{t('drawer.qr')}</p>
-                                            <p className="text-xs text-gray-500">{t('drawer.qr_hint')}</p>
+                                            <p className="font-bold text-gray-900 text-sm">{t('export.title')}</p>
+                                            <p className="text-xs text-gray-500">{t('drawer.save_hint')}</p>
                                         </div>
                                     </button>
 
@@ -2601,6 +2584,8 @@ const AppContent = () => {
                 isOpen={isExportModalOpen}
                 onClose={() => setIsExportModalOpen(false)}
                 onExport={handleExportConfirm}
+                events={events}
+                weight={weight}
             />
 
             <PasswordDisplayModal
@@ -2627,14 +2612,6 @@ const AppContent = () => {
                 onClose={() => setIsFormOpen(false)}
                 eventToEdit={editingEvent}
                 onSave={handleSaveEvent}
-            />
-
-            <QRCodeModal
-                isOpen={isQrModalOpen}
-                onClose={() => setIsQrModalOpen(false)}
-                events={events}
-                weight={weight}
-                onImportJson={(payload) => importEventsFromJson(payload)}
             />
 
             <ImportModal
