@@ -135,30 +135,32 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
     };
 
     if (!sim || sim.timeH.length === 0) return (
-        <div className="h-72 flex flex-col items-center justify-center text-gray-400 bg-white rounded-2xl border border-gray-100 p-8">
+        <div className="h-72 flex flex-col items-center justify-center text-gray-400 bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
             <Activity className="w-12 h-12 mb-4 text-gray-200" strokeWidth={1.5} />
             <p className="text-sm font-medium">{t('timeline.empty')}</p>
         </div>
     );
     
     return (
-        <div className="bg-white p-4 pb-2 rounded-2xl border border-gray-100 relative overflow-hidden flex flex-col">
-            <div className="flex justify-between items-center mb-4 px-2">
-                <h2 className="text-sm font-bold text-gray-600 tracking-tight flex items-center gap-2" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif' }}>
-                    <Activity size={16} />
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100">
+                <h2 className="text-sm font-semibold text-gray-800 tracking-tight flex items-center gap-2" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif' }}>
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-pink-50 border border-pink-100">
+                        <Activity size={16} className="text-[#f6c4d7]" />
+                    </span>
                     {t('chart.title')}
                 </h2>
                 
-                <div className="flex bg-gray-50 rounded-xl p-1 gap-1">
-                     <button
+                <div className="flex bg-gray-50 rounded-xl p-1 gap-1 border border-gray-100">
+                    <button
                         onClick={() => zoomToDuration(30)}
-                        className="px-3 py-1.5 text-xs font-bold text-gray-500 rounded-lg hover:bg-white transition-all"
+                        className="px-3 py-1.5 text-xs font-bold text-gray-600 rounded-lg hover:bg-white transition-all"
                     >
                         1M
                     </button>
                     <button
                         onClick={() => zoomToDuration(7)}
-                        className="px-3 py-1.5 text-xs font-bold text-gray-500 rounded-lg hover:bg-white transition-all"
+                        className="px-3 py-1.5 text-xs font-bold text-gray-600 rounded-lg hover:bg-white transition-all"
                     >
                         1W
                     </button>
@@ -167,7 +169,7 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
                         onClick={() => {
                             setXDomain(clampDomain([minTime, maxTime]));
                         }}
-                        className="p-1.5 text-gray-500 rounded-lg hover:bg-white transition-all"
+                        className="p-1.5 text-gray-600 rounded-lg hover:bg-white transition-all"
                     >
                         <RotateCcw size={14} />
                     </button>
@@ -176,32 +178,32 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
             
             <div 
                 ref={containerRef}
-                className="h-64 w-full touch-none relative select-none"
+                className="h-64 w-full touch-none relative select-none px-2 pb-2"
             >
                 <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart margin={{ top: 10, right: 0, bottom: 0, left: -20 }}>
+                    <ComposedChart margin={{ top: 12, right: 8, bottom: 0, left: -12 }}>
                         <defs>
                             <linearGradient id="colorConc" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#f6c4d7" stopOpacity={0.18}/>
                                 <stop offset="95%" stopColor="#f6c4d7" stopOpacity={0}/>
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f6f8" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f2f4f7" />
                         <XAxis 
                             dataKey="time" 
                             type="number" 
                             domain={xDomain || ['auto', 'auto']}
                             allowDataOverflow={true}
                             tickFormatter={(ms) => formatDate(new Date(ms), lang)}
-                            tick={{fontSize: 10, fill: '#9aa3b1', fontWeight: 500}}
-                            minTickGap={50}
+                            tick={{fontSize: 10, fill: '#9aa3b1', fontWeight: 600}}
+                            minTickGap={48}
                             axisLine={false}
                             tickLine={false}
                             dy={10}
                         />
                         <YAxis 
                             dataKey="conc"
-                            tick={{fontSize: 10, fill: '#9aa3b1', fontWeight: 500}}
+                            tick={{fontSize: 10, fill: '#9aa3b1', fontWeight: 600}}
                             axisLine={false}
                             tickLine={false}
                         />
@@ -210,17 +212,17 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
                             cursor={{ stroke: '#f6c4d7', strokeWidth: 1, strokeDasharray: '4 4' }} 
                             trigger="hover"
                         />
-                        <ReferenceLine x={now} stroke="#f6c4d7" strokeDasharray="3 3" />
+                        <ReferenceLine x={now} stroke="#f6c4d7" strokeDasharray="3 3" strokeWidth={1.2} />
                         <Area 
                             data={data}
                             type="monotone" 
                             dataKey="conc" 
                             stroke="#f6c4d7" 
-                            strokeWidth={2} 
-                            fillOpacity={0.9} 
+                            strokeWidth={2.2} 
+                            fillOpacity={0.95} 
                             fill="url(#colorConc)" 
                             isAnimationActive={false}
-                            activeDot={{ r: 6, strokeWidth: 4, stroke: '#fff', fill: '#ec4899' }} 
+                            activeDot={{ r: 6, strokeWidth: 3, stroke: '#fff', fill: '#ec4899' }} 
                         />
                         <Scatter 
                             data={eventPoints} 
@@ -250,14 +252,14 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
             </div>
             {/* Compact external slider for precise panning (mobile friendly) */}
             {data.length > 1 && (
-                <div className="mt-2 px-2">
+                <div className="mt-2 px-4 pb-3">
                     <input
                         type="range"
                         min={String(sliderMin)}
                         max={String(sliderMax)}
                         value={String(sliderValue)}
                         onChange={handleSliderChange}
-                        className="w-full accent-pink-300"
+                        className="w-full accent-pink-300 h-1.5 rounded-full bg-gray-100"
                     />
                 </div>
             )}

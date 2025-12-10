@@ -264,24 +264,53 @@ const AppContent = () => {
             <div className="flex-1 flex flex-col overflow-hidden w-full max-w-lg mx-auto bg-white shadow-xl shadow-gray-900/10">
                 {/* Header */}
                 {currentView === 'home' && (
-                    <header className="bg-white px-6 pt-12 pb-6 rounded-b-[2.5rem] shadow-xl shadow-gray-100 z-10 sticky top-0">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <h1 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t('status.estimate')}</h1>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-6xl font-black text-gray-900 tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">
-                                        {currentLevel.toFixed(0)}
-                                    </span>
-                                    <span className="text-xl font-bold text-gray-400">pg/mL</span>
+                    <header className="relative px-4 pt-10 pb-6 rounded-b-[2.5rem]">
+                        <div className="relative bg-white border border-gray-100 rounded-3xl shadow-lg shadow-gray-100 px-5 py-6">
+                            <div className="flex justify-between items-start gap-3 mb-4">
+                                <div>
+                                    <h1 className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-50 text-[11px] font-semibold text-gray-600 tracking-tight border border-gray-100 mb-1">
+                                        {t('status.estimate')}
+                                    </h1>
+                                    <div className="flex items-end gap-2">
+                                        <span className="text-6xl font-black text-gray-900 tracking-tighter">
+                                            {currentLevel.toFixed(0)}
+                                        </span>
+                                        <span className="text-lg font-bold text-gray-400">pg/mL</span>
+                                    </div>
+                                </div>
+                                <div className="text-right text-xs font-medium text-gray-400 leading-tight">
+                                    <div className="px-3 py-1 rounded-full bg-gray-50 text-gray-600 border border-gray-100 inline-flex items-center gap-2">
+                                        <Calendar size={14} className="text-pink-400" />
+                                        <span>{formatDate(currentTime, lang)}</span>
+                                    </div>
+                                    <div className="mt-2 text-[11px] font-bold text-gray-500">
+                                        {formatTime(currentTime)}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2 items-end" />
-                        </div>
-                        <div className="flex gap-4">
-                             <button onClick={() => setIsWeightModalOpen(true)} className="flex items-center gap-2 bg-gray-50 pl-3 pr-4 py-2 rounded-full text-sm font-bold text-gray-600 hover:bg-gray-100 transition">
-                                <Settings size={16} className="text-gray-400" />
-                                {t('status.weight')}: {weight} kg
-                            </button>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/80 border border-gray-100 shadow-sm">
+                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-inner">
+                                        <Activity size={18} className="text-pink-400" />
+                                    </div>
+                                    <div className="leading-tight">
+                                        <p className="text-[11px] font-semibold text-gray-500">{t('timeline.title')}</p>
+                                        <p className="text-lg font-bold text-gray-900">{events.length || 0}</p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => setIsWeightModalOpen(true)} 
+                                    className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100 shadow-sm hover:shadow-md transition"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-inner">
+                                        <Settings size={18} className="text-gray-500" />
+                                    </div>
+                                    <div className="text-left leading-tight">
+                                        <p className="text-[11px] font-semibold text-gray-500">{t('status.weight')}</p>
+                                        <p className="text-lg font-bold text-gray-900">{weight} kg</p>
+                                    </div>
+                                </button>
+                            </div>
                         </div>
                     </header>
                 )}
@@ -298,40 +327,36 @@ const AppContent = () => {
 
                     {/* Timeline */}
                     {currentView === 'history' && (
-                        <div className="space-y-6 pt-8">
-                            <div className="flex items-center justify-between px-4">
-                                <h2 className="text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
-                                   <Activity size={24} className="text-[#f6c4d7]" /> {t('timeline.title')}
-                                </h2>
-                                <button 
-                                    onClick={handleAddEvent}
-                                    className="bg-gray-900 text-white px-4 py-2 rounded-full flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform min-w-[136px] h-11 justify-center"
-                                >
-                                    <Plus size={16} />
-                                    <span className="font-bold text-sm">{t('btn.add')}</span>
-                                </button>
+                        <div className="relative space-y-5 pt-6 pb-16">
+                            <div className="px-4">
+                                <div className="w-full p-4 rounded-2xl bg-white flex items-center justify-between shadow-sm">
+                                    <h2 className="text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
+                                       <Activity size={22} className="text-[#f6c4d7]" /> {t('timeline.title')}
+                                    </h2>
+                                    <div className="min-w-[136px] h-11" />
+                                </div>
                             </div>
 
                             {Object.keys(groupedEvents).length === 0 && (
-                                <div className="text-center py-12 text-gray-400 bg-white rounded-3xl border border-dashed border-gray-200">
+                                <div className="mx-4 text-center py-12 text-gray-400 bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
                                    <p>{t('timeline.empty')}</p>
                                 </div>
                             )}
 
                             {Object.entries(groupedEvents).map(([date, items]) => (
-                                <div key={date} className="relative">
-                                    <div className="sticky top-0 bg-gray-50/95 backdrop-blur py-2 px-2 z-0 flex items-center gap-2 mb-2">
+                                <div key={date} className="relative mx-4 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                                    <div className="sticky top-0 bg-white/95 backdrop-blur py-3 px-4 z-0 flex items-center gap-2 border-b border-gray-100">
                                         <div className="w-2 h-2 rounded-full bg-pink-200"></div>
                                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{date}</span>
                                     </div>
-                                    <div className="space-y-3">
+                                    <div className="divide-y divide-gray-100">
                                         {(items as DoseEvent[]).map(ev => (
                                             <div 
                                                 key={ev.id} 
                                                 onClick={() => handleEditEvent(ev)}
-                                                className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md hover:border-pink-100 transition-all cursor-pointer group relative overflow-hidden"
+                                                className="p-4 flex items-center gap-4 hover:bg-gray-50 transition-all cursor-pointer group relative"
                                             >
-                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${ev.route === Route.injection ? 'bg-pink-50' : 'bg-gray-50'}`}>
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${ev.route === Route.injection ? 'bg-pink-50' : 'bg-gray-50'} border border-gray-100`}>
                                                     {getRouteIcon(ev.route)}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
@@ -339,7 +364,7 @@ const AppContent = () => {
                                                         <span className="font-bold text-gray-900 text-sm truncate">
                                                             {ev.route === Route.patchRemove ? t('route.patchRemove') : t(`ester.${ev.ester}`)}
                                                         </span>
-                                                        <span className="font-mono text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
+                                                        <span className="font-mono text-[11px] font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
                                                             {formatTime(new Date(ev.timeH * 3600000))}
                                                         </span>
                                                     </div>
@@ -357,7 +382,7 @@ const AppContent = () => {
                                                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-700">
                                                                 <span>{`${t('timeline.dose_label')}: ${ev.doseMG.toFixed(2)} mg`}</span>
                                                                 {ev.ester !== Ester.E2 && (
-                                                                    <span className="text-gray-500 text-xs">
+                                                                    <span className="text-gray-500 text-[11px]">
                                                                         {`(${ (ev.doseMG * getToE2Factor(ev.ester)).toFixed(2) } mg E2)`}
                                                                     </span>
                                                                 )}
@@ -370,23 +395,36 @@ const AppContent = () => {
                                     </div>
                                 </div>
                             ))}
+                            
+                            {/* Floating action button above bottom nav */}
+                            <div className="fixed left-1/2 bottom-28 -translate-x-1/2 z-30 w-full max-w-xs px-4 pointer-events-none">
+                                <button
+                                    onClick={handleAddEvent}
+                                    className="pointer-events-auto w-full bg-gray-900 text-white px-4 py-3 rounded-full flex items-center justify-center gap-2 shadow-lg shadow-gray-300/60 hover:translate-y-[-2px] active:translate-y-0 transition-transform"
+                                >
+                                    <Plus size={18} />
+                                    <span className="font-bold text-sm">{t('btn.add')}</span>
+                                </button>
+                            </div>
                         </div>
                     )}
 
                     {/* Settings */}
                     {currentView === 'settings' && (
-                        <div className="space-y-8 pt-4">
-                            <div className="px-4 flex items-center justify-between">
-                                <h2 className="text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
-                                    <Settings size={24} className="text-[#f6c4d7]" /> {t('nav.settings')}
-                                </h2>
-                                <div className="min-w-[136px] h-11" />
+                        <div className="relative space-y-5 pt-6 pb-8">
+                            <div className="px-4">
+                                <div className="w-full p-4 rounded-2xl bg-white flex items-center justify-between shadow-sm">
+                                    <h2 className="text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
+                                        <Settings size={22} className="text-[#f6c4d7]" /> {t('nav.settings')}
+                                    </h2>
+                                    <div className="min-w-[136px] h-11" />
+                                </div>
                             </div>
 
                             {/* General Settings */}
-                            <div className="space-y-3">
-                                <h3 className="px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('settings.group.general')}</h3>
-                                <div className="w-full p-4 rounded-2xl border border-gray-200 bg-white space-y-3">
+                            <div className="space-y-2">
+                                <h3 className="px-5 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('settings.group.general')}</h3>
+                                <div className="mx-4 w-auto p-4 rounded-2xl border border-gray-200 bg-white space-y-3 shadow-sm">
                                     <div className="flex items-start gap-3">
                                         <Languages className="text-blue-500" size={20} />
                                         <div className="text-left">
@@ -404,12 +442,12 @@ const AppContent = () => {
                             </div>
 
                             {/* Data Management */}
-                            <div className="space-y-3">
-                                <h3 className="px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('settings.group.data')}</h3>
-                                <div className="space-y-3">
+                            <div className="space-y-2">
+                                <h3 className="px-5 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('settings.group.data')}</h3>
+                                <div className="mx-4 bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
                                     <button
                                         onClick={() => setIsImportModalOpen(true)}
-                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-teal-200 hover:bg-teal-50 transition bg-white"
+                                        className="w-full flex items-center gap-3 px-4 py-4 hover:bg-teal-50 transition text-left"
                                     >
                                         <Upload className="text-teal-500" size={20} />
                                         <div className="text-left">
@@ -420,7 +458,7 @@ const AppContent = () => {
 
                                     <button
                                         onClick={handleSaveDosages}
-                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-pink-200 hover:bg-pink-50 transition bg-white"
+                                        className="w-full flex items-center gap-3 px-4 py-4 hover:bg-pink-50 transition text-left"
                                     >
                                         <Download className="text-pink-400" size={20} />
                                         <div className="text-left">
@@ -432,7 +470,7 @@ const AppContent = () => {
                                     <button
                                         onClick={handleClearAllEvents}
                                         disabled={!events.length}
-                                        className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition bg-white ${events.length ? 'border-gray-200 hover:border-red-200 hover:bg-red-50' : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'}`}
+                                        className={`w-full flex items-center gap-3 px-4 py-4 text-left transition ${events.length ? 'hover:bg-red-50' : 'bg-gray-50 cursor-not-allowed opacity-60'}`}
                                     >
                                         <Trash2 className="text-red-400" size={20} />
                                         <div className="text-left">
@@ -444,16 +482,16 @@ const AppContent = () => {
                             </div>
 
                             {/* About */}
-                            <div className="space-y-3">
-                                <h3 className="px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('settings.group.about')}</h3>
-                                <div className="space-y-3">
+                            <div className="space-y-2">
+                                <h3 className="px-5 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('settings.group.about')}</h3>
+                                <div className="mx-4 bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
                                     <button
                                         onClick={() => {
                                             showDialog('confirm', t('drawer.model_confirm'), () => {
                                                 window.open('https://misaka23323.com/articles/estrogen-model-summary', '_blank');
                                             });
                                         }}
-                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition bg-white"
+                                        className="w-full flex items-center gap-3 px-4 py-4 hover:bg-purple-50 transition text-left"
                                     >
                                         <Info className="text-purple-500" size={20} />
                                         <div className="text-left">
@@ -468,7 +506,7 @@ const AppContent = () => {
                                                 window.open('https://github.com/SmirnovaOyama/Oyama-s-HRT-recorder', '_blank');
                                             });
                                         }}
-                                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-gray-800 hover:bg-gray-50 transition bg-white"
+                                        className="w-full flex items-center gap-3 px-4 py-4 hover:bg-gray-50 transition text-left"
                                     >
                                         <Github className="text-gray-700" size={20} />
                                         <div className="text-left">
@@ -480,7 +518,7 @@ const AppContent = () => {
                             </div>
 
                             {/* Version Footer */}
-                            <div className="pt-4 pb-8 flex justify-center">
+                            <div className="pt-2 pb-4 flex justify-center">
                                 <p className="text-xs font-medium text-gray-300">
                                     {APP_VERSION}
                                 </p>
