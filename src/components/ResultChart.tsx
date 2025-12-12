@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from '../contexts/LanguageContext';
 import { formatDate, formatTime } from '../utils/helpers';
-import { SimulationResult, DoseEvent } from '../../logic';
+import { SimulationResult, DoseEvent, interpolateConcentration } from '../../logic';
 import { Activity, RotateCcw } from 'lucide-react';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart, Scatter
@@ -68,6 +68,13 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
             now: n
         };
     }, [data]);
+
+    const nowPoint = useMemo(() => {
+        if (!sim || data.length === 0) return null;
+        const conc = interpolateConcentration(sim, now / 3600000);
+        if (conc === null || Number.isNaN(conc)) return null;
+        return { time: now, conc };
+    }, [sim, data, now]);
 
     // Slider helpers for quick panning (helps mobile users)
     const visibleWidth = useMemo(() => {
@@ -220,6 +227,26 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
                             fill="url(#colorConc)" 
                             isAnimationActive={false}
                             activeDot={{ r: 6, strokeWidth: 3, stroke: '#fff', fill: '#ec4899' }} 
+                        />
+                        <Scatter 
+                            data={nowPoint ? [nowPoint] : []}
+                            isAnimationActive={false}
+                            shape={({ cx, cy, payload }: any) => {
+                                const conc = payload?.conc ?? 0;
+                                const radius = Math.min(7, Math.max(3, Math.sqrt(Math.max(conc, 0)) * 0.25));
+                                return (
+                                    <g className="group">
+                                        <circle cx={cx} cy={cy} r={1} fill="transparent" />
+                                        <circle 
+                                            cx={cx} cy={cy} 
+                                            r={radius} 
+                                            fill="#bfdbfe" 
+                                            stroke="white" 
+                                            strokeWidth={1.5} 
+                                        />
+                                    </g>
+                                );
+                            }}
                         />
                         <Scatter 
                             data={eventPoints} 
